@@ -25,14 +25,11 @@ class GithubClient : KoinComponent {
             .url(ISSUES_BY_REPOSITORY_URI_TEMPLATE.format(owner, repository))
             .build()
 
-        val onFailureBeforeResponse: (call: Call, e: Exception) -> Unit = { _, e ->
-            onFailure(e)
-        }
+        val onFailureBeforeResponse: (call: Call, e: Exception) -> Unit = { _, e -> onFailure(e) }
 
         val onResponse: (call: Call, response: Response) -> Unit = { _, response ->
             if (response.isSuccessful) {
-                val value = objectMapper.readValue<List<Issue>>(response.body!!.string())
-                onSuccessful(value)
+                objectMapper.readValue<List<Issue>>(response.body!!.string()).let(onSuccessful)
             } else {
                 onFailure(WithoutSuccessfulStatusCodeException(response.code))
             }
