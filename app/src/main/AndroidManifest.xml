@@ -16,7 +16,7 @@
         android:theme="@style/Theme.GithubIssues"
         tools:targetApi="31">
         <activity
-            android:name=".IssueActivity"
+            android:name=".ui.activity.IssueActivity"
             android:exported="false"
             android:label="@string/title_activity_issue"
             android:theme="@style/Theme.GithubIssues">
@@ -25,7 +25,7 @@
                 android:value="" />
         </activity>
         <activity
-            android:name=".MainActivity"
+            android:name=".ui.activity.IssueListActivity"
             android:exported="true"
             android:label="@string/app_name"
             android:theme="@style/Theme.GithubIssues">
