@@ -18,9 +18,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.githubIssues.model.Issue
+import com.githubIssues.ui.component.LazyLoadingComponent
 import com.githubIssues.ui.viewmodel.IssueViewModel
 import org.koin.android.ext.android.inject
-
 
 class IssueActivity : ComponentActivity() {
     private val viewModel: IssueViewModel by inject()
@@ -74,12 +74,15 @@ fun DefaultPreview(viewModel: IssueViewModel) {
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.SpaceBetween,
                             content = {
-                                viewModel.userAvatar?.let {
-                                    Image(
-                                        bitmap = it.asImageBitmap(),
-                                        contentDescription = null
-                                    )
-                                }
+                                LazyLoadingComponent(
+                                    isLoading = viewModel.userAvatar == null,
+                                    whenLoaded = {
+                                        Image(
+                                            bitmap = viewModel.userAvatar!!.asImageBitmap(),
+                                            contentDescription = null
+                                        )
+                                    }
+                                )
                                 Column {
                                     Row {
                                         Text(
