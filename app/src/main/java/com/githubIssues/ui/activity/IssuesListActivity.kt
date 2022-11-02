@@ -1,5 +1,6 @@
 package com.githubIssues.ui.activity
 
+import android.content.Context
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -16,40 +17,47 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.githubIssues.model.Issue
+import com.githubIssues.ui.component.LazyLoadingComponent
 import com.githubIssues.ui.viewmodel.IssuesListViewModel
 import org.koin.android.ext.android.inject
 
 class IssueListActivity : ComponentActivity() {
     private val viewModel: IssuesListViewModel by inject()
 
-    private fun renderIssueList(issues: List<Issue>) = runOnUiThread {
-        setContent { IssueList(issues = issues, onClick = { viewModel.onIssueClick(this, it) }) }
+    private fun renderIssueList() = runOnUiThread {
+        setContent { IssueList(this, viewModel) }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        viewModel.getAllIssues(::renderIssueList)
+        viewModel.getAllIssues()
+        renderIssueList()
     }
 }
 
 @Composable
-fun IssueList(issues: List<Issue>, onClick: (Issue) -> Unit) {
-    LazyColumn(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        items(
-            items = issues,
-            itemContent = { Issue(it, onClick) }
-        )
-    }
+fun IssueList(ctx: Context, viewModel: IssuesListViewModel) {
+    LazyLoadingComponent(
+        isLoading = viewModel.issues.isEmpty(),
+        whenLoaded = {
+            LazyColumn(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                items(
+                    items = viewModel.issues,
+                    itemContent = { Issue(ctx, it, viewModel) }
+                )
+            }
+        }
+    )
 }
 
 @Composable
-fun Issue(issue: Issue, onClick: (Issue) -> Unit) = Box(
+fun Issue(ctx: Context, issue: Issue, viewModel: IssuesListViewModel) = Box(
     modifier = Modifier
         .border(0.5.dp, Color.LightGray)
-        .clickable { onClick(issue) },
+        .clickable { viewModel.onIssueClick(ctx, issue) },
     content = {
         Row(
             modifier = Modifier
