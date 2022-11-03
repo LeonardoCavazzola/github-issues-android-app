@@ -32,7 +32,7 @@ class IssueViewModel : KoinComponent {
             createdAt = value.createdAt.format(formatter)
             userLogin = value.user.login
             userAvatarUrl = value.user.avatarUrl
-            bitmapClient.get(userAvatarUrl) { userAvatar = it }
+            bitmapClient.get(userAvatarUrl).subscribe { userAvatar = it }
         }
 
     companion object {
