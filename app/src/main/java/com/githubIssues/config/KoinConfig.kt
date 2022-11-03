@@ -13,6 +13,6 @@ val appModule = module {
     single<GithubClient> { GithubClient() }
     single<BitmapClient> { BitmapClient() }
     single<ObjectMapper> { buildObjectMapper() }
-    factory <IssuesListViewModel> { IssuesListViewModel() }
+    factory<IssuesListViewModel>{ IssuesListViewModel() }
     factory<IssueViewModel> { IssueViewModel() }
 }
