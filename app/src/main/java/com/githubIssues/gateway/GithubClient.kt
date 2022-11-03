@@ -2,40 +2,31 @@ package com.githubIssues.gateway
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.githubIssues.exception.WithoutSuccessfulStatusCodeException
 import com.githubIssues.extension.enqueue
 import com.githubIssues.model.Issue
-import okhttp3.Call
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import okhttp3.Response
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
+import reactor.core.publisher.Flux
 
 class GithubClient : KoinComponent {
     private val httpClient: OkHttpClient by inject()
     private val objectMapper: ObjectMapper by inject()
 
-    fun getAllIssuesByRepository(
-        owner: String,
-        repository: String,
-        onFailure: Exception.() -> Unit,
-        onSuccessful: (List<Issue>) -> Unit,
-    ) {
+    fun getAllIssuesByRepository(owner: String, repository: String): Flux<Issue> {
         val request = Request.Builder()
             .url(ISSUES_BY_REPOSITORY_URI_TEMPLATE.format(owner, repository))
             .build()
 
-        val onFailureBeforeResponse: (call: Call, e: Exception) -> Unit = { _, e -> onFailure(e) }
-
-        val onResponse: (call: Call, response: Response) -> Unit = { _, response ->
-            if (response.isSuccessful) {
-                objectMapper.readValue<List<Issue>>(response.body!!.string()).let(onSuccessful)
+        return httpClient.newCall(request).enqueue().flatMapMany {
+            if (it.isSuccessful) {
+                Flux.fromIterable(objectMapper.readValue<List<Issue>>(it.body!!.string()))
             } else {
-                onFailure(WithoutSuccessfulStatusCodeException(response.code))
+                Flux.error(WithoutSuccessfulStatusCodeException(it.code))
             }
         }
-
-        httpClient.newCall(request).enqueue(onFailureBeforeResponse, onResponse)
     }
 
     companion object {
@@ -43,5 +34,3 @@ class GithubClient : KoinComponent {
         private const val ISSUES_BY_REPOSITORY_URI_TEMPLATE = "$GITHUB_API_URL/repos/%s/%s/issues"
     }
 }
-
-class WithoutSuccessfulStatusCodeException(statusCode: Int) : Exception(statusCode.toString())
